@@ -64,8 +64,8 @@ while True:
                 weather_data += '|%s_%s' % (str(now_time[0]), str(now_time[1]))
                 print(weather_data)
         else:
-            print("read_nothing")
-       
+            print("read nothing")
+ 
     except Exception as e:
         print("close")
         pi.bb_serial_read_close(RX)
