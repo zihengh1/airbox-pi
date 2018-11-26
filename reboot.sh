@@ -8,4 +8,5 @@ sleep 5
 } || {
     /usr/bin/git clone https://github.com/zihengh1/airbox-pi/ /home/pi/airbox-pi
     /usr/bin/nohup python -u /home/pi/airbox-pi/PiM25.py &
+}
 
