@@ -99,7 +99,7 @@ while True:
             print(e)
             print "Error: writing to SD"    
     pi.bb_serial_read_close(RX)
-    time.sleep()
+    time.sleep(295)
 
 pi.stop()
 print("End")
