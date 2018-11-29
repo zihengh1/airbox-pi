@@ -63,14 +63,14 @@ if not status:  # if it worked, i.e. if it's running...
         print "problem instantiating pi, the exception message is: ", e
 
 pi.set_mode(RX, pigpio.INPUT)
-try:
-    pi.bb_serial_read_close(RX)
-except Exception as e:
-    pass
 
 while True:
     now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S").split(" ")
     weather_data = ""
+    try:
+        pi.bb_serial_read_close(RX)
+    except Exception as e:
+        pass
     try:
         pi.bb_serial_read_open(RX, 9600)
         time.sleep(0.9)
