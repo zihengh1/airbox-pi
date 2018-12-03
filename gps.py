@@ -2,6 +2,29 @@ import time
 import pigpio
 import commands
 
+def data_read(all_lines):
+    gprmc = [s for s in all_lines if "$GPRMC" in s]
+    if gprmc is not None:
+        gdata = gprmc[0].split(",")
+
+        status    = gdata[1]
+        latitude  = gdata[3]      #latitude
+        dir_lat   = gdata[4]      #latitude direction N/S
+        longitute = gdata[5]      #longitute
+        dir_lon   = gdata[6]      #longitude direction E/W
+        speed     = gdata[7]      #Speed in knots
+        trCourse  = gdata[8]      #True course
+        try:
+            receive_t = gdata[1][0:2] + ":" + gdata[1][2:4] + ":" + gdata[1][4:6]
+        except ValueError:
+            pass
+ 
+        try:
+            receive_d = gdata[9][0:2] + "/" + gdata[9][2:4] + "/" + gdata[9][4:6] 
+        except ValueError:
+            pass
+        print "time : %s, latitude : %s(%s), longitude : %s(%s), speed : %s, True Course : %s, Date : %s" %  (receive_t, latitude , dir_lat, longitute, dir_lon, speed, trCourse, receive_d)
+
 RX = 24
 status, process = commands.getstatusoutput('sudo pidof pigpiod')
 
@@ -33,8 +56,8 @@ while True:
         (status, data) = pi.bb_serial_read(RX)
         if status:
             print("read_something")
-            lines = ''.join(chr(x) for x in data)
-            print(lines)
+            lines = ''.join(chr(x) for x in data).splitlines()
+            data_read(lines)
         else:
             print("read nothing")
  
