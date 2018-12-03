@@ -1,8 +1,6 @@
-# PiM25_config.py
 import re
 import os
 
-# GPS Location
 GPS_LAT = 25.1933
 GPS_LON = 121.7870
 

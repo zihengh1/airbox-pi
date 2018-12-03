@@ -6,7 +6,6 @@ def data_read(all_lines):
     gprmc = [s for s in all_lines if "$GPRMC" in s]
     if gprmc is not None:
         gdata = gprmc[0].split(",")
-
         status    = gdata[1]
         latitude  = gdata[3]      #latitude
         dir_lat   = gdata[4]      #latitude direction N/S
@@ -23,9 +22,13 @@ def data_read(all_lines):
             receive_d = gdata[9][0:2] + "/" + gdata[9][2:4] + "/" + gdata[9][4:6] 
         except ValueError:
             pass
+        
         print "time : %s, latitude : %s(%s), longitude : %s(%s), speed : %s, True Course : %s, Date : %s" %  (receive_t, latitude , dir_lat, longitute, dir_lon, speed, trCourse, receive_d)
+        return latitude, dir_lat, longitute, dir_lon, speed
 
 RX = 24
+GPS_LAT = 25.1933
+GPS_LON = 121.7870
 status, process = commands.getstatusoutput('sudo pidof pigpiod')
 
 if status:  #  it wasn't running, so start it
@@ -57,6 +60,7 @@ while True:
         if status:
             print("read_something")
             lines = ''.join(chr(x) for x in data).splitlines()
+            print(data)
             data_read(lines)
         else:
             print("read nothing")
@@ -65,8 +69,10 @@ while True:
         print(e)
         pi.bb_serial_read_close(RX)
         print("close success")
-
-    pi.bb_serial_read_close(RX)
+    try:
+        pi.bb_serial_read_close(RX)
+    except:
+        pass
     time.sleep(5)
 
 pi.stop()

@@ -5,10 +5,37 @@ from datetime import datetime
 import PiM25_config as Conf
 import os
 
+def GPS_data_read(lines):
+    gprmc = [s for s in lines if "$GPRMC" in s]
+    GPS_info = ""
+    if gprmc is not None:
+        gdata = gprmc[0].split(",")
+        status    = gdata[1]
+        latitude  = gdata[3]      #latitude
+        dir_lat   = gdata[4]      #latitude direction N/S
+        longitute = gdata[5]      #longitute
+        dir_lon   = gdata[6]      #longitude direction E/W
+        speed     = gdata[7]      #Speed in knots
+        trCourse  = gdata[8]      #True course
+        try:
+            receive_t = gdata[1][0:2] + ":" + gdata[1][2:4] + ":" + gdata[1][4:6]
+        except ValueError:
+            pass
+ 
+        try:
+            receive_d = gdata[9][4:] + "/" + gdata[9][2:4] + "/" + gdata[9][0:2] 
+        except ValueError:
+            pass
+        
+        print "time : %s, latitude : %s(%s), longitude : %s(%s), speed : %s, True Course : %s, Date : %s" %  (receive_t, latitude , dir_lat, longitute, dir_lon, speed, trCourse, receive_d)
+        GPS_info += '|gps_lat(%s)=%s' % (dir_lat, latitude)
+        GPS_info += '|gps_lon(%s)=%s' % (dir_lon, longitute)
+        return GPS_info
+        
 def bytes2hex(s):
     return "".join("{:02x}".format(c) for c in s)
 
-def data_read(dstr):
+def G5T_data_read(dstr):
     # data standard style
     standard = "424d001c"
     data_len = 64
@@ -34,17 +61,18 @@ def upload_data(msg):
     msg += '|app=%s' % (Conf.APP_ID)
     msg += '|device=%s' % (Conf.DEVICE)
     msg += '|device_id=%s' % (Conf.DEVICE_ID)
-    msg += '|gps_lat=%s' % (Conf.GPS_LAT)
-    msg += '|gps_lon=%s' % (Conf.GPS_LON)
-    msg += Conf.others
+    # msg += Conf.others
     
     Restful_URL = Conf.Restful_URL
     print(msg)
     restful_str = "wget -O /tmp/last_upload.log \"" + Restful_URL + "?device_id=" + Conf.DEVICE_ID + "&msg=" + msg + "\""
     os.system(restful_str)
-    
-RX = 15
+ 
+G5T_RX = 15
+GPS_RX = 24
 path = "/home/pi/Data/"
+
+########## Start PIGPIO ##########
 status, process = commands.getstatusoutput('sudo pidof pigpiod')
 
 if status:  #  it wasn't running, so start it
@@ -61,24 +89,56 @@ if not status:  # if it worked, i.e. if it's running...
         print "pi is instantiated successfully"
     except Exception as e:
         print "problem instantiating pi, the exception message is: ", e
-
-pi.set_mode(RX, pigpio.INPUT)
+##################################
+print("\n")
 
 while True:
-    now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S").split(" ")
     weather_data = ""
+    now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S").split(" ")
+
+    ########## Read GPS ##########
     try:
-        pi.bb_serial_read_close(RX)
+        pi.bb_serial_read_close(GPS_RX)
     except Exception as e:
         pass
+    
     try:
-        pi.bb_serial_read_open(RX, 9600)
-        time.sleep(0.9)
-        (status, data) = pi.bb_serial_read(RX)
-        if status:
+        pi.bb_serial_read_open(GPS_RX, 9600)
+        time.sleep(1)
+        (GPS_status, GPS_data) = pi.bb_serial_read(GPS_RX)
+        if GPS_status:
+            print("read something")
+            lines = ''.join(chr(x) for x in GPS_data).splitlines()
+            weather_data += GPS_data_read(lines)
+        else:
+            print("read nothing")
+    except Exception as e:
+        print(e)
+    
+    try:
+        pi.bb_serial_read_close(GPS_RX)
+        print("GPS close success")
+    except Exception as e:
+        pass
+    ###############################
+    print(weather_data)
+    print("\n")
+    time.sleep(2)
+
+    ########## Reasd G5T ##########
+    try:
+        pi.bb_serial_read_close(G5T_RX)
+    except Exception as e:
+        pass
+
+    try:
+        pi.bb_serial_read_open(G5T_RX, 9600)
+        time.sleep(1)
+        (G5T_status, G5T_data) = pi.bb_serial_read(G5T_RX)
+        if G5T_status:
             print("read_something")
-            data_hex = bytes2hex(data)
-            weather_data = data_read(data_hex) 
+            data_hex = bytes2hex(G5T_data)
+            weather_data += G5T_data_read(data_hex) 
             if len(weather_data):
                 weather_data += '|date=%s' % (str(now_time[0]))
                 weather_data += '|time=%s' % (str(now_time[1]))
@@ -88,9 +148,16 @@ while True:
  
     except Exception as e:
         print(e)
-        pi.bb_serial_read_close(RX)
-        print("close success")
 
+    try:
+        pi.bb_serial_read_close(G5T_RX)
+        print("G5T close success")
+    except Exception as e: 
+        pass
+    #############################
+    time.sleep(1)
+    ########## Store msg ##########
+    
     with open(path + str(now_time[0]) + ".txt", "a") as f:
         try:
             if len(weather_data):
@@ -98,7 +165,7 @@ while True:
         except Exception as e:
             print(e)
             print "Error: writing to SD"    
-    pi.bb_serial_read_close(RX)
+    ##############################
     time.sleep(5)
 
 pi.stop()
