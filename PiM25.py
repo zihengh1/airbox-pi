@@ -22,8 +22,10 @@ def dmm2dd(dir, DMM):
     return dms2dd(D, M, S, dir)
 
 def GPS_data_read(lines):
-    gprmc = [s for s in lines if "$GPRMC" in s]
     GPS_info = ""
+    gprmc = [rmc for rmc in lines if "$GPRMC" in rmc]
+    gpgga = [gga for gga in lines if "$GPGGA" in gga]
+    print(gpgga)
     if gprmc is not None:
         gdata = gprmc[0].split(",")
         status    = gdata[1]
