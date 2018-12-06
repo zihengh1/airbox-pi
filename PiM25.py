@@ -4,6 +4,21 @@ import commands
 from datetime import datetime
 import PiM25_config as Conf
 import os
+import re
+
+def dms2dd(degree, minutes, seconds, direction):
+    dd = float(degrees) + float(minutes)/60 + float(seconds)/(60*60);
+    if direction == 'S' or direction == 'W':
+        dd *= -1
+    return round(dd, 6);
+
+def dmm2dd(dir, DMM):
+    index = DMM.find(".")
+    D = int(DMM[:index-2])
+    M = int(DMM[index-2:index])
+    S = round(float(DMM[index:]) * 60, 0)
+    print(D, M, S, dir)
+    return dms2dd(D, M, S, dir)
 
 def GPS_data_read(lines):
     gprmc = [s for s in lines if "$GPRMC" in s]
@@ -28,8 +43,10 @@ def GPS_data_read(lines):
             pass
         
         print "time : %s, latitude : %s(%s), longitude : %s(%s), speed : %s, True Course : %s, Date : %s" %  (receive_t, latitude , dir_lat, longitute, dir_lon, speed, trCourse, receive_d)
-        GPS_info += '|gps_lat(%s)=%s' % (dir_lat, latitude)
-        GPS_info += '|gps_lon(%s)=%s' % (dir_lon, longitute)
+        # GPS_info += '|gps_lat(%s)=%s' % (dir_lat, latitude)
+        # GPS_info += '|gps_lon(%s)=%s' % (dir_lon, longitute)
+        GPS_info += '|gps_lat=%s' % (dmm2dd(dir_lat, latitude))
+        GPS_info += '|gps_lon=%s' % (dmm2dd(dir_lon, longitude))
         return GPS_info
         
 def bytes2hex(s):
@@ -61,11 +78,11 @@ def upload_data(msg):
     msg += '|app=%s' % (Conf.APP_ID)
     msg += '|device=%s' % (Conf.DEVICE)
     msg += '|device_id=%s' % (Conf.DEVICE_ID)
-    # msg += Conf.others
+    msg += Conf.others
     
     Restful_URL = Conf.Restful_URL
     print(msg)
-    restful_str = "wget -O /tmp/last_upload.log \"" + Restful_URL + "?device_id=" + Conf.DEVICE_ID + "&msg=" + msg + "\""
+    restful_str = "wget -O /tmp/last_upload.log \"" + Restful_URL + "device_id=" + Conf.DEVICE_ID + "&msg=" + msg + "\""
     os.system(restful_str)
  
 G5T_RX = 15
@@ -90,7 +107,6 @@ if not status:  # if it worked, i.e. if it's running...
     except Exception as e:
         print "problem instantiating pi, the exception message is: ", e
 ##################################
-print("\n")
 
 while True:
     weather_data = ""
@@ -107,7 +123,7 @@ while True:
         time.sleep(1)
         (GPS_status, GPS_data) = pi.bb_serial_read(GPS_RX)
         if GPS_status:
-            print("read something")
+            print("read GPS")
             lines = ''.join(chr(x) for x in GPS_data).splitlines()
             weather_data += GPS_data_read(lines)
         else:
@@ -121,8 +137,7 @@ while True:
     except Exception as e:
         pass
     ###############################
-    print(weather_data)
-    print("\n")
+    print("weather_data: ", weather_data)
     time.sleep(2)
 
     ########## Reasd G5T ##########
@@ -136,7 +151,7 @@ while True:
         time.sleep(1)
         (G5T_status, G5T_data) = pi.bb_serial_read(G5T_RX)
         if G5T_status:
-            print("read_something")
+            print("read G5T")
             data_hex = bytes2hex(G5T_data)
             weather_data += G5T_data_read(data_hex) 
             if len(weather_data):
