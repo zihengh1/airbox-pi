@@ -13,6 +13,7 @@ def dms2dd(degree, minutes, seconds, direction):
     return round(dd, 6);
 
 def dmm2dd(dir, DMM):
+    DMM = str(abs(float(DMM)))
     index = DMM.find(".")
     D = int(DMM[:index-2])
     M = int(DMM[index-2:index])
