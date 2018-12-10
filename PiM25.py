@@ -21,7 +21,7 @@ def dmm2dd(dir, DMM):
     return dms2dd(D, M, S, dir)
 
 def read_last_gps(GPS_info):
-    last_gps = open("gps_info.txt","r")
+    last_gps = open("../Local/gps_info.txt","r")
     temp = last_gps.readlines()[0].split(", ")
     GPS_info += '|gps_num=%s' % (temp[0])
     GPS_info += '|gps_lat=%s' % (temp[1])
@@ -38,7 +38,7 @@ def GPS_data_read(lines):
             gga = gpgga[0].split(",")
             gdata = gprmc[0].split(",")
             valid = gdata[2]
-            if valid is not 'V':    # valid status
+            if valid is 'A':    # valid status
                 print("GPS valid status")
                 satellite = int(gga[7])
                 status    = gdata[1]
@@ -48,17 +48,6 @@ def GPS_data_read(lines):
                 dir_lon   = gdata[6]      #longitude direction E/W
                 speed     = gdata[7]      #Speed in knots
                 speed = float(speed) * 1.825
-                """
-                try:
-                    receive_t = gdata[1][0:2] + ":" + gdata[1][2:4] + ":" + gdata[1][4:6]
-                except ValueError:
-                    pass
- 
-                try:
-                    receive_d = gdata[9][4:] + "/" + gdata[9][2:4] + "/" + gdata[9][0:2] 
-                except ValueError:
-                    pass
-                """
                 print "latitude : %s(%s), longitude : %s(%s), speed : %f" %  (latitude , dir_lat, longitude, dir_lon, speed)
                 if speed <= 10:     # move slow
                     print("real time gps location")
@@ -128,7 +117,10 @@ def upload_data(msg, pm_s, loc_s):
         Restful_URL = Conf.Restful_URL
         print(msg)
         restful_str = "wget -O /tmp/last_upload.log \"" + Restful_URL + "device_id=" + Conf.DEVICE_ID + "&msg=" + msg + "\""
-        os.system(restful_str)
+        try:
+            os.system(restful_str)
+        except Exception as e:
+            print(e)
     else:
         print("Error: Won't upload data")
  
@@ -158,7 +150,7 @@ if not status:  # if it worked, i.e. if it's running...
 while True:
     weather_data = ""
     PM_STATUS = -1    # get pm2.5 data
-    LOCATION_STATUS = -1  # get location infomation
+    LOCATION_STATUS = -1  # get location information
 
     ########## Read G5T ##########
     try:
@@ -226,6 +218,7 @@ while True:
     ###############################
 
     print("weather_data: ", weather_data)
+    print("\n")
     upload_data(weather_data, PM_STATUS, LOCATION_STATUS)
     time.sleep(3)
     print("\n")
