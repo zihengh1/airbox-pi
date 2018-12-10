@@ -20,70 +20,72 @@ def dmm2dd(dir, DMM):
     S = round(float(DMM[index:]) * 60, 0)
     return dms2dd(D, M, S, dir)
 
+def read_last_gps(GPS_info):
+    last_gps = open("gps_info.txt","r")
+    temp = last_gps.readlines()[0].split(", ")
+    GPS_info += '|gps_num=%s' % (temp[0])
+    GPS_info += '|gps_lat=%s' % (temp[1])
+    GPS_info += '|gps_lon=%s' % (temp[3])
+    return GPS_info
+
 def GPS_data_read(lines):
     GPS_info = ""
-    print(lines)
     try:
         gprmc = [rmc for rmc in lines if "$GPRMC" in rmc]
         gpgga = [gga for gga in lines if "$GPGGA" in gga]
 
-        if gprmc is not None and gpgga is not None:
+        if len(gprmc) and len(gpgga):   # read correct
             gga = gpgga[0].split(",")
-            satellite = int(gga[7])
-      
             gdata = gprmc[0].split(",")
-            status    = gdata[1]
-            latitude  = gdata[3]      #latitude
-            dir_lat   = gdata[4]      #latitude direction N/S
-            longitude = gdata[5]      #longitude
-            dir_lon   = gdata[6]      #longitude direction E/W
-            speed     = gdata[7]      #Speed in knots
-            latitude = "2502.47011"
-            dir_lat = "N"
-            longitude = "12136.85948"
-            dir_lon = "E"
-            speed = "0.334"
-            speed = float(speed) * 1.825
-            """
-            try:
-                receive_t = gdata[1][0:2] + ":" + gdata[1][2:4] + ":" + gdata[1][4:6]
-            except ValueError:
-                pass
+            valid = gdata[2]
+            if valid is not 'V':    # valid status
+                print("GPS valid status")
+                satellite = int(gga[7])
+                status    = gdata[1]
+                latitude  = gdata[3]      #latitude
+                dir_lat   = gdata[4]      #latitude direction N/S
+                longitude = gdata[5]      #longitude
+                dir_lon   = gdata[6]      #longitude direction E/W
+                speed     = gdata[7]      #Speed in knots
+                speed = float(speed) * 1.825
+                """
+                try:
+                    receive_t = gdata[1][0:2] + ":" + gdata[1][2:4] + ":" + gdata[1][4:6]
+                except ValueError:
+                    pass
  
-            try:
-                receive_d = gdata[9][4:] + "/" + gdata[9][2:4] + "/" + gdata[9][0:2] 
-            except ValueError:
-                pass
-            """
-            print "latitude : %s(%s), longitude : %s(%s), speed : %f" %  (latitude , dir_lat, longitude, dir_lon, speed)
-            if len(longitude) and len(latitude):
-                if speed <= 10:
+                try:
+                    receive_d = gdata[9][4:] + "/" + gdata[9][2:4] + "/" + gdata[9][0:2] 
+                except ValueError:
+                    pass
+                """
+                print "latitude : %s(%s), longitude : %s(%s), speed : %f" %  (latitude , dir_lat, longitude, dir_lon, speed)
+                if speed <= 10:     # move slow
                     print("real time gps location")
                     GPS_info += '|gps_num=%f' % (satellite)
                     GPS_info += '|gps_lat=%s' % (dmm2dd(dir_lat, latitude))
                     GPS_info += '|gps_lon=%s' % (dmm2dd(dir_lon, longitude))
+
+                    # store GPS information
+                    last_gps = open("gps_info.txt","w") 
+                    last_gps.write(str(satellite) + ", " + str(dmm2dd(dir_lat, latitude)) + ", " + dir_lat + ", " + str(dmm2dd(dir_lon, longitude)) + ", " + dir_lon)
+                    last_gps.close() 
                 else:
+                    # won't upload data
                     print("out of speed")
-                last_gps = open("gps_info.txt","w") 
-                last_gps.write(str(satellite) + ", " + str(dmm2dd(dir_lat, latitude)) + ", " + str(dmm2dd(dir_lon, longitude)))
-                last_gps.close() 
             else:
-                print("GPS dead")
-                print("use last gps location")
-                last_gps = open("gps_info.txt","r")
-                temp = last_gps.readlines()[0].split(", ")
-                GPS_info += '|gps_num=%s' % (temp[0])
-                GPS_info += '|gps_lat=%s' % (temp[1])
-                GPS_info += '|gps_lon=%s' % (temp[2])
-                  
+                print("GPS invalid status")
+                # use last gps location
+                GPS_info = read_last_gps(GPS_info)
+        else:
+            print("GPS can't find GPRMC and GPGGA")
+            # use last gps location
+            GPS_info = read_last_gps(GPS_info)
+
     except Exception as e:
         print(e)
-        print("use last gps location")
-        last_gps = open("gps_info.txt","r")
-        temp = last_gps.readlines()[0].split(", ")
-        GPS_info += '|gps_num=%s' % (temp[0])
-        GPS_info += '|gps_lat=%s' % (temp[1])
-        GPS_info += '|gps_lon=%s' % (temp[2])
+        # use last gps location
+        GPS_info = read_last_gps(GPS_info)
 
     return GPS_info
         
