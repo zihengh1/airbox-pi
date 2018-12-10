@@ -22,41 +22,69 @@ def dmm2dd(dir, DMM):
 
 def GPS_data_read(lines):
     GPS_info = ""
-    gprmc = [rmc for rmc in lines if "$GPRMC" in rmc]
-    gpgga = [gga for gga in lines if "$GPGGA" in gga]
-       
-    if gprmc is not None and gpgga is not None:
-        gga = gpgga[0].split(",")
-        satellite = gga[7]
+    print(lines)
+    try:
+        gprmc = [rmc for rmc in lines if "$GPRMC" in rmc]
+        gpgga = [gga for gga in lines if "$GPGGA" in gga]
+
+        if gprmc is not None and gpgga is not None:
+            gga = gpgga[0].split(",")
+            satellite = int(gga[7])
       
-        gdata = gprmc[0].split(",")
-        status    = gdata[1]
-        latitude  = gdata[3]      #latitude
-        dir_lat   = gdata[4]      #latitude direction N/S
-        longitude = gdata[5]      #longitude
-        dir_lon   = gdata[6]      #longitude direction E/W
-        speed     = gdata[7]      #Speed in knots
-        """
-        try:
-            receive_t = gdata[1][0:2] + ":" + gdata[1][2:4] + ":" + gdata[1][4:6]
-        except ValueError:
-            pass
+            gdata = gprmc[0].split(",")
+            status    = gdata[1]
+            latitude  = gdata[3]      #latitude
+            dir_lat   = gdata[4]      #latitude direction N/S
+            longitude = gdata[5]      #longitude
+            dir_lon   = gdata[6]      #longitude direction E/W
+            speed     = gdata[7]      #Speed in knots
+            latitude = "2502.47011"
+            dir_lat = "N"
+            longitude = "12136.85948"
+            dir_lon = "E"
+            speed = "0.334"
+            speed = float(speed) * 1.825
+            """
+            try:
+                receive_t = gdata[1][0:2] + ":" + gdata[1][2:4] + ":" + gdata[1][4:6]
+            except ValueError:
+                pass
  
-        try:
-            receive_d = gdata[9][4:] + "/" + gdata[9][2:4] + "/" + gdata[9][0:2] 
-        except ValueError:
-            pass
-        """
-        print "latitude : %s(%s), longitude : %s(%s), speed : %s" %  (latitude , dir_lat, longitude, dir_lon, speed)
-        if longitude and latitude:
-            if speed <= 10:
-                GPS_info += '|gps_num=%s' % (int(satellite))
-                GPS_info += '|gps_lat=%s' % (dmm2dd(dir_lat, latitude))
-                GPS_info += '|gps_lon=%s' % (dmm2dd(dir_lon, longitude))
+            try:
+                receive_d = gdata[9][4:] + "/" + gdata[9][2:4] + "/" + gdata[9][0:2] 
+            except ValueError:
+                pass
+            """
+            print "latitude : %s(%s), longitude : %s(%s), speed : %f" %  (latitude , dir_lat, longitude, dir_lon, speed)
+            if len(longitude) and len(latitude):
+                if speed <= 10:
+                    print("real time gps location")
+                    GPS_info += '|gps_num=%f' % (satellite)
+                    GPS_info += '|gps_lat=%s' % (dmm2dd(dir_lat, latitude))
+                    GPS_info += '|gps_lon=%s' % (dmm2dd(dir_lon, longitude))
+                else:
+                    print("out of speed")
+                last_gps = open("gps_info.txt","w") 
+                last_gps.write(str(satellite) + ", " + str(dmm2dd(dir_lat, latitude)) + ", " + str(dmm2dd(dir_lon, longitude)))
+                last_gps.close() 
             else:
-                print("out of speed")
-        else:
-            print("GPS dead")
+                print("GPS dead")
+                print("use last gps location")
+                last_gps = open("gps_info.txt","r")
+                temp = last_gps.readlines()[0].split(", ")
+                GPS_info += '|gps_num=%s' % (temp[0])
+                GPS_info += '|gps_lat=%s' % (temp[1])
+                GPS_info += '|gps_lon=%s' % (temp[2])
+                  
+    except Exception as e:
+        print(e)
+        print("use last gps location")
+        last_gps = open("gps_info.txt","r")
+        temp = last_gps.readlines()[0].split(", ")
+        GPS_info += '|gps_num=%s' % (temp[0])
+        GPS_info += '|gps_lat=%s' % (temp[1])
+        GPS_info += '|gps_lon=%s' % (temp[2])
+
     return GPS_info
         
 def bytes2hex(s):
@@ -164,7 +192,7 @@ while True:
    
     print("weather_data: ", weather_data)
     print("\n")
-    time.sleep(1)
+    time.sleep(3)
 
     ########## Read GPS ##########
     try:
@@ -197,7 +225,7 @@ while True:
 
     print("weather_data: ", weather_data)
     upload_data(weather_data, PM_STATUS, LOCATION_STATUS)
-    time.sleep(1)
+    time.sleep(3)
     print("\n")
 
     ########## Store msg ##########
@@ -209,7 +237,7 @@ while True:
             print(e)
             print "Error: writing to SD"    
     ##############################
-    time.sleep(3)
+    time.sleep(10)
 
 pi.stop()
 print("End")
