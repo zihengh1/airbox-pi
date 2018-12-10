@@ -233,7 +233,7 @@ while True:
             print(e)
             print "Error: writing to SD"    
     ##############################
-    time.sleep(10)
+    time.sleep(275)
 
 pi.stop()
 print("End")
