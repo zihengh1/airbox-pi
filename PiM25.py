@@ -23,9 +23,10 @@ def dmm2dd(dir, DMM):
 def read_last_gps(GPS_info):
     last_gps = open("../Local/gps_info.txt","r")
     temp = last_gps.readlines()[0].split(", ")
-    GPS_info += '|gps_num=%s' % (temp[0])
-    GPS_info += '|gps_lat=%s' % (temp[1])
-    GPS_info += '|gps_lon=%s' % (temp[3])
+    GPS_info += '|gps_num=%s' % (last_gps[0])
+    GPS_info += '|gps_lat=%s' % (last_gps[1])
+    GPS_info += '|gps_lon=%s' % (last_gps[3])
+    last_gps.close()
     return GPS_info
 
 def GPS_data_read(lines):
