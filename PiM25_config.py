@@ -8,7 +8,8 @@ DEVICE_ID = "DEVICE_ID1234"
 DEVICE_IP = ''
 
 # Restful_API
-Restful_URL = "https://data.lass-net.org/Upload/PiM25.php?"     # save in local
+url = open("../Local/URL.txt","r")
+Restful_URL = url.readlines()[0]
 Restful_interval = 60           # 60 seconds
 float_re_pattern = re.compile("^-?\d+\.\d+$")
 num_re_pattern = re.compile("^-?\d+\.\d+$|^-?\d+$")
