@@ -21,7 +21,7 @@ def dmm2dd(dir, DMM):
     return dms2dd(D, M, S, dir)
 
 def read_last_gps(GPS_info):
-    last_gps = open("../Local/gps_info.txt","r")
+    last_gps = open("/home/pi/Local/gps_info.txt","r")
     temp = last_gps.readlines()[0].replace("\n", "").split(", ")
     GPS_info += '|gps_num=%s' % (temp[0])
     GPS_info += '|gps_lat=%s' % (temp[1])
@@ -57,7 +57,7 @@ def GPS_data_read(lines):
                     GPS_info += '|gps_lon=%s' % (dmm2dd(dir_lon, longitude))
 
                     # store GPS information
-                    last_gps = open("../Local/gps_info.txt","w") 
+                    last_gps = open("/home/pi/Local/gps_info.txt","w") 
                     last_gps.write(str(satellite) + ", " + str(dmm2dd(dir_lat, latitude)) + ", " + dir_lat + ", " + str(dmm2dd(dir_lon, longitude)) + ", " + dir_lon)
                     last_gps.close() 
                 else:
