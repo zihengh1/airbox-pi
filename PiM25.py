@@ -104,7 +104,7 @@ def G5T_data_read(dstr):
         return weather 
 
 def upload_data(msg, pm_s, loc_s):
-    if pm_s == 1 and loc_s == 1:
+    if pm_s == 1:
         msg += '|app=%s' % (Conf.APP_ID)
         msg += '|device=%s' % (Conf.DEVICE)
         msg += '|device_id=%s' % (Conf.DEVICE_ID)
