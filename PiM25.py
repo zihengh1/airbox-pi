@@ -57,13 +57,13 @@ def GPS_data_read(lines):
                     GPS_info += '|gps_num=%f' % (satellite)
                     # GPS_info += '|gps_lat=%s' % (dmm2dd(dir_lat, latitude))
                     # GPS_info += '|gps_lon=%s' % (dmm2dd(dir_lon, longitude))
-                    GPS_info += '|gps_lat=%s' % (latitude)
-                    GPS_info += '|gps_lon=%s' % (longitude)
+                    GPS_info += '|gps_lat=%f' % (latitude * 100)
+                    GPS_info += '|gps_lon=%f' % (longitude * 100)
                     
                     # store GPS information
                     last_gps = open("/home/pi/Local/gps_info.txt","w") 
                     # last_gps.write(str(satellite) + ", " + str(dmm2dd(dir_lat, latitude)) + ", " + dir_lat + ", " + str(dmm2dd(dir_lon, longitude)) + ", " + dir_lon)
-                    last_gps.write(str(satellite) + ", " + str(latitude) + ", " + dir_lat + ", " + str(longitude) + ", " + dir_lon)
+                    last_gps.write(str(satellite) + ", " + str(latitude * 100) + ", " + dir_lat + ", " + str(longitude * 100) + ", " + dir_lon)
                     last_gps.close() 
                 else:
                     # won't upload data
