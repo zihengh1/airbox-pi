@@ -6,6 +6,7 @@ import PiM25_config as Conf
 import os
 import re
 
+"""
 def dms2dd(degrees, minutes, seconds, direction):
     dd = float(degrees) + float(minutes)/60 + float(seconds)/(60*60);
     if direction == 'S' or direction == 'W':
@@ -19,6 +20,7 @@ def dmm2dd(dir, DMM):
     M = int(DMM[index-2:index])
     S = round(float(DMM[index:]) * 60, 0)
     return dms2dd(D, M, S, dir)
+"""
 
 def read_last_gps(GPS_info):
     last_gps = open("/home/pi/Local/gps_info.txt","r")
@@ -53,12 +55,15 @@ def GPS_data_read(lines):
                 if speed <= 10:     # move slow
                     print("real time gps location")
                     GPS_info += '|gps_num=%f' % (satellite)
-                    GPS_info += '|gps_lat=%s' % (dmm2dd(dir_lat, latitude))
-                    GPS_info += '|gps_lon=%s' % (dmm2dd(dir_lon, longitude))
-
+                    # GPS_info += '|gps_lat=%s' % (dmm2dd(dir_lat, latitude))
+                    # GPS_info += '|gps_lon=%s' % (dmm2dd(dir_lon, longitude))
+                    GPS_info += '|gps_lat=%s' % (latitude)
+                    GPS_info += '|gps_lon=%s' % (longitude)
+                    
                     # store GPS information
                     last_gps = open("/home/pi/Local/gps_info.txt","w") 
-                    last_gps.write(str(satellite) + ", " + str(dmm2dd(dir_lat, latitude)) + ", " + dir_lat + ", " + str(dmm2dd(dir_lon, longitude)) + ", " + dir_lon)
+                    # last_gps.write(str(satellite) + ", " + str(dmm2dd(dir_lat, latitude)) + ", " + dir_lat + ", " + str(dmm2dd(dir_lon, longitude)) + ", " + dir_lon)
+                    last_gps.write(str(satellite) + ", " + str(latitude) + ", " + dir_lat + ", " + str(longitude) + ", " + dir_lon)
                     last_gps.close() 
                 else:
                     # won't upload data
@@ -233,7 +238,7 @@ while True:
             print(e)
             print "Error: writing to SD"    
     ##############################
-    time.sleep(291)
+    time.sleep(192)
 
 pi.stop()
 print("End")
