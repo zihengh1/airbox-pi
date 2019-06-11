@@ -42,7 +42,7 @@ def display(data):
         ## Drawing information ##
         Himage1 = Image.new('1', (epd2in7.EPD_HEIGHT, epd2in7.EPD_WIDTH), 255)
         draw = ImageDraw.Draw(Himage1)
-        font_size = ImageFont.truetype('/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',14)
+        font_size = ImageFont.truetype('/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf',14)
 
         ## String format ##        
         app = data["app"]

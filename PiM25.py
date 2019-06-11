@@ -12,7 +12,6 @@ import lib.upload_data as upload
 import lib.screen as epaper
 import lib.ploting as ploting
 
-
 if __name__ == '__main__':
 
     ## initial PIGPIO library ##
@@ -125,6 +124,7 @@ if __name__ == '__main__':
    
     info_key = weather_data.keys()
     store_data = [weather_data]
+    
     if os.path.exists(Conf.data_path + "record.csv") is False:
         with open(Conf.data_path + "record.csv", "a") as output_file:
             dict_writer = csv.DictWriter(output_file, info_key)
@@ -137,6 +137,7 @@ if __name__ == '__main__':
         except Exception as e:
             print(e)
             print("Error: writing to SD")
+   
     ##############################
 
     ploting.plot()
